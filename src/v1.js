@@ -1,3 +1,8 @@
+import testFunc from './mods/test-func';
+import css from './styles/v1.scss';
+
+$('head').append(`<style>${css}</style>`);
+
 console.log('test');
 
 var x = '1';
@@ -12,3 +17,5 @@ console.log(yoyo);
 
 
 test(x);
+
+testFunc();

@@ -3,11 +3,16 @@ const uglify = require('gulp-uglify');
 const concat = require('gulp-concat');
 const sass = require('gulp-sass');
 const eslint = require('gulp-eslint');
-const fs = require('fs');
+const rename = require('gulp-rename');
 const browserify = require('browserify');
 const babelify = require('babelify');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
+const glob = require('glob');
+const es = require('event-stream');
+const insert = require('gulp-insert');
+const stringify = require('stringify');
+const sassify = require('sassify');
 
 
 // Custom ESLint configuration file
@@ -35,23 +40,31 @@ gulp.task('lint:scripts', () => {
 });
 
 
-// NOTE: DEFUNCT - use build:scripts instead
-// Concatenate and minify scripts in the src directory
-gulp.task('scripts', () => {
-	return gulp.src(paths.scripts)
-	.pipe(concat('build.js'))
-	.pipe(uglify())
-	.pipe(gulp.dest(paths.dest));
-});
+gulp.task('build:scripts', (done) => {
 
+ 	glob(paths.scripts, (err, files) => {
+	 	if (err) done(err);
 
-gulp.task('build:scripts', () => {
-	browserify('./src/v1.js')
-  .transform('babelify', {presets: ['es2015', 'react']})
-  .bundle()
-  .pipe(source('v1-transformed.js'))
-  .pipe(buffer())
-  .pipe(uglify())
-  .pipe(gulp.dest(paths.dest))
+		const tasks = files.map(entry => {
+			return browserify({ entries: [entry] })
+		  .transform('babelify', {presets: ['es2015', 'es2016', 'es2017', 'react']})
+      .transform(stringify, {
+        appliesTo: {
+          includeExtensions: ['.html', '.css', '.sass', '.scss']
+        },
+        minify: true,
+      })
+		  .bundle()
+		  .pipe(source(entry.replace('./src/', '')))
+		  .pipe(rename({ extname: '.bundle.js' }))
+		  .pipe(buffer())
+		  .pipe(uglify())
+      .pipe(insert.prepend('/* jshint ignore:start */\n'))
+      .pipe(insert.append('\n/* jshint ignore:end */'))
+		  .pipe(gulp.dest(paths.dest));
+		});
+
+		es.merge(tasks).on('end', done);
+	});
 });
 
