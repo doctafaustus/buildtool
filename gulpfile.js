@@ -12,7 +12,7 @@ const glob = require('glob');
 const es = require('event-stream');
 const insert = require('gulp-insert');
 const stringify = require('stringify');
-const sassify = require('sassify');
+const sassify = require('./config/sassify-node-8');
 
 
 // Custom ESLint configuration file
@@ -48,6 +48,11 @@ gulp.task('build:scripts', (done) => {
 		const tasks = files.map(entry => {
 			return browserify({ entries: [entry] })
 		  .transform('babelify', {presets: ['es2015', 'es2016', 'es2017', 'react']})
+
+      // TODO: Somethings not right with this local sassify package
+      .transform(sassify, {
+        sourceMap: false
+      })
       .transform(stringify, {
         appliesTo: {
           includeExtensions: ['.html', '.css', '.sass', '.scss']
