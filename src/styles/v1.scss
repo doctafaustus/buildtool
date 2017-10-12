@@ -1,5 +1,9 @@
 body {
 	div {
 		border: solid 1px red;
+
+		&#container {
+			border: solid 5px green;
+		}
 	}
 }

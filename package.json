@@ -20,6 +20,7 @@
     "gulp-sass": "3.1.0",
     "gulp-uglify": "2.0.1",
     "node-sass": "4.5.3",
+    "resolve": "^1.4.0",
     "sass-module-importer": "1.4.0",
     "stringify": "^5.1.0",
     "vinyl-buffer": "^1.0.0",

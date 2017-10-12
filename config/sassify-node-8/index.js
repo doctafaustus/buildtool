@@ -57,9 +57,10 @@ module.exports = tools.makeStringTransform('sassify', {
                     })() + "');";
             }
         } else {
-            exp = JSON.stringify(css.css.toString());
+            exp = css.css.toString();
         }
-        var out = "module.exports = " + exp + ";";
+
+        var out = exp;
 
         done(null, out);
     };
