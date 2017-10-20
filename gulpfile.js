@@ -1,23 +1,29 @@
+// Gulp
 const gulp = require('gulp');
-const uglify = require('gulp-uglify');
-const concat = require('gulp-concat');
-const sass = require('gulp-sass');
+
+// Gulp helpers
+const insert = require('gulp-insert');
+const sequence = require('gulp-sequence');
 const eslint = require('gulp-eslint');
 const rename = require('gulp-rename');
+const uglify = require('gulp-uglify');
 const browserify = require('browserify');
 const babelify = require('babelify');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
 const glob = require('glob');
 const es = require('event-stream');
-const insert = require('gulp-insert');
 const stringify = require('stringify');
-const sassify = require('./config/sassify-node-8');
+const del = require('del');
 
+// SCSS
+const sass = require('gulp-sass');
+const sassLint = require('gulp-sass-lint');
+const sassify = require('sassify');
 
+// ESLint configuration file
+const eslintConfig = require('./.eslintrc.json');
 
-// Custom ESLint configuration file
-const eslintConfig = require('./config/eslint-config');
 
 
 // Define relevant paths
@@ -29,10 +35,19 @@ const paths = {
   },
   html: './src/*.html',
   scripts: './src/*.js',
-  stylesheets: ['./src/*.css', './src/*.scss', './src/*.sass'],
+  stylesheets: ['src/styles/*.css', 'src/styles/*.scss', 'src/styles/*.sass'],
   dest: './build/',
 };
 
+
+
+// --- Lint ---
+gulp.task('lint:stylesheets', () => {
+  return gulp.src(paths.stylesheets)
+    .pipe(sassLint())
+    .pipe(sassLint.format())
+    .pipe(sassLint.failOnError());
+});
 
 gulp.task('lint:scripts', () => {
   return gulp.src(paths.scripts)
@@ -40,6 +55,19 @@ gulp.task('lint:scripts', () => {
     .pipe(eslint.format());
 });
 
+gulp.task('lint', ['lint:stylesheets', 'lint:scripts']);
+
+
+// --- Build ---
+gulp.task('build:clean', (cb) => {
+  return del(paths.dest, cb);
+});
+
+gulp.task('build:stylesheets', () => {
+  return gulp.src(paths.stylesheets)
+    .pipe(sass().on('error', sass.logError))
+    .pipe(gulp.dest(paths.dest));
+});
 
 gulp.task('build:scripts', (done) => {
 
@@ -54,7 +82,7 @@ gulp.task('build:scripts', (done) => {
       })
       .transform(stringify, {
         appliesTo: {
-          includeExtensions: ['.html', '.css', '.sass', '.scss']
+          includeExtensions: ['.html', '.css', '.sass', '.scss'],
         },
         minify: true,
       })
@@ -72,3 +100,21 @@ gulp.task('build:scripts', (done) => {
 	});
 });
 
+
+
+// Build experiment
+gulp.task('build', () => {
+  return sequence('lint', 'build:clean', ['build:stylesheets', 'build:scripts'])();
+});
+
+
+// Watch and rebuild when experiment files change
+gulp.task('watch', () => {
+  gulp.watch(paths.src.html, ['build']);
+  gulp.watch(paths.src.scripts, ['build']);
+  gulp.watch(paths.src.stylesheets, ['build']);
+});
+
+
+// Default task
+gulp.task('default', ['build', 'watch']);

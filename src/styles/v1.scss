@@ -1,9 +1,11 @@
+$primary-color: #333;
+
 body {
 	div {
-		border: solid 1px red;
+		border: solid 1px $primary-color;
 
 		&#container {
-			border: solid 5px green;
+			border: solid 5px $primary-color;
 		}
 	}
 }
